@@ -1,0 +1,17 @@
+---
+type Props = {
+  text: string
+  icon: string
+}
+
+const { text, icon } = Astro.props
+---
+
+<div class="w-fit px-3 py-2 group rounded border flex gap-2 items-center border-neutral-200 dark:border-neutral-700 blend">
+  <svg height={30} width={30} class="fill-current">
+    <use href={`/stack.svg#${icon}`}></use>
+  </svg>
+  <span class="text-sm capitalize text-neutral-500 dark:text-neutral-400 group-hover:text-black group-hover:dark:text-white blend">
+    {text}
+  </span>
+</div>
