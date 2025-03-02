@@ -53,17 +53,17 @@ export const LINKS: Links = [
 
 // Socials
 export const SOCIALS: Socials = [
+  { 
+    NAME: "Github",
+    ICON: "github",
+    TEXT: "nonesse",
+    HREF: "https://github.com/nonesse"
+  }
   /*{ 
     NAME: "Email",
     ICON: "email", 
     TEXT: "markhorn.dev@gmail.com",
     HREF: "mailto:markhorn.dev@gmail.com",
-  },
-  { 
-    NAME: "Github",
-    ICON: "github",
-    TEXT: "markhorn-dev",
-    HREF: "https://github.com/markhorn-dev/astro-sphere"
   },
   { 
     NAME: "LinkedIn",
