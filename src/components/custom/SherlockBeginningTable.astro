@@ -1,0 +1,41 @@
+---
+import Table from "./Table.astro";
+import { LANG_EN, LANG_ES } from "@consts";
+
+interface TableRow {
+  header: string;
+  content: string | { text: string; url: string };
+}
+
+const headersByLang: Record<string, TableRow[]> = {
+  es: [
+    { header: "Escenario", content: "" },
+    { header: "Archivos", content: "" },
+    { header: "Fuente de apoyo", content: { text: "", url: "" } },
+  ],
+  en: [
+    { header: "Scenario", content: "" },
+    { header: "Files", content: "" },
+    { header: "Support source", content: { text: "", url: "" } },
+  ],
+};
+
+const { lang = LANG_EN, data = [] } = Astro.props as { lang?: string; data?: TableRow[] };
+
+const defaultData = headersByLang[lang];
+
+const mergedData = defaultData
+  .map((defaultRow, index) => ({
+    header: defaultRow.header,
+    content: data[index]?.content || defaultRow.content,
+  }))
+  .filter(row => {
+    return (
+      (typeof row.content === 'string' && row.content.trim() !== '') ||
+      (typeof row.content === 'object' && row.content.url && row.content.url.trim() !== '')
+    );
+  });
+
+---
+
+<Table data={mergedData} />

@@ -1,0 +1,15 @@
+---
+import HiddenHint from "./HiddenHint.astro";
+import HiddenAnswer from "./HiddenAnswer.astro";
+import { LANG_EN, LANG_ES, NO_SHERLOCK_HINT_EN, NO_SHERLOCK_HINT_ES } from "@consts";
+
+const {lang = {LANG_EN}, task_number, task_content, hint_content, answer } = Astro.props;
+
+const defaultHintContent = lang === LANG_ES ? NO_SHERLOCK_HINT_ES : NO_SHERLOCK_HINT_EN
+const finalHintContent = hint_content || defaultHintContent
+---
+<h4 class="text-justify">Task {task_number}. {task_content}</h4>
+
+<HiddenHint lang={lang} content={finalHintContent}/>
+ 
+<HiddenAnswer lang={lang} content={answer}/>

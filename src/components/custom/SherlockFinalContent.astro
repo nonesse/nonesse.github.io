@@ -1,0 +1,11 @@
+---
+import { URL_SHERLOCK_SOLVED_GIF } from "../../consts";
+
+const { lang = "en"} = Astro.props
+
+const title = lang == "es" ? "¡Eso es todo!": "That's it!"
+---
+
+<h2>{title}</h2>
+
+<img alt="GIF" height="100px" src={URL_SHERLOCK_SOLVED_GIF} />

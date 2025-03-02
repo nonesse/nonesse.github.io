@@ -1,0 +1,27 @@
+---
+interface TableRow {
+  header: string;
+  content: string | { text: string; url: string };
+}
+
+const { data = [] } = Astro.props as { data?: TableRow[] };
+---
+
+<table class="w-full table-auto border-collapse">
+  <tbody>
+    {data.map((row) => (
+      <tr class="border-t border-gray-300 dark:border-gray-600">
+        <td class="pl-0 pr-3 py-3 text-justify">{row.header}</td>
+        <td class="p-3 text-justify">
+          {typeof row.content === 'object' && row.content.url ? (
+            <a href={row.content.url} target="_blank" rel="noopener noreferrer">
+              {row.content.text}
+            </a>
+          ) : (
+            row.content
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>

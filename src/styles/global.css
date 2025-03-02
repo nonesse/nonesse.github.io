@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root{
-  --copy-btn-margin:10px;
+  --copy-btn-margin:7px;
 }
 
 @layer base {
@@ -158,11 +158,11 @@ article img {
   top:var(--copy-btn-margin);
 }
 .copy-btn {
-  @apply  w-[30px] fixed;
+  @apply  w-[11px] fixed;
   left:calc(100% - var(--copy-btn-margin));
   transform: translateX(-100%);
 }
 
 .copy-svg {
-  @apply w-full aspect-square text-white opacity-70 hover:opacity-90;
+  @apply w-full aspect-square text-white opacity-60 hover:opacity-80;
 }

@@ -1,0 +1,9 @@
+---
+import { Code } from 'astro:components';
+
+const { code = "", lang = "bash"  } = Astro.props;
+---
+
+<div class="pl-8">
+    <Code code={code + " "} lang={lang} />
+</div>

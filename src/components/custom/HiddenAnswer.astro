@@ -1,0 +1,9 @@
+---
+import { LANG_EN, LANG_ES } from "@consts";
+import HiddenText from "./HiddenText.astro";
+const { lang = LANG_EN, content } = Astro.props;
+
+const summary = lang === LANG_ES ? "Respuesta" : "Answer";
+---
+
+<HiddenText style="list-style-type: square;" summary={summary} content={content}/>

@@ -1,0 +1,11 @@
+---
+const { summary, content, clase, style } = Astro.props;
+
+---
+
+<details>
+  <summary>{summary}</summary>
+  <ul style={style}>
+    <li class={clase}><slot/>{content}</li>
+  </ul>
+</details>

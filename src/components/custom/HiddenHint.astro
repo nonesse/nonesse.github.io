@@ -1,0 +1,9 @@
+---
+import { LANG_EN, LANG_ES } from "@consts";
+import HiddenText from "./HiddenText.astro";
+const { lang = LANG_EN, content } = Astro.props;
+
+const summary = lang === LANG_ES ? "Pista" : "Hint";
+---
+
+<HiddenText clase="text-justify" summary={summary} content={content}/>

