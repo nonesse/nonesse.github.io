@@ -1,7 +1,7 @@
 ---
 title: "Sherlock - Brutus - English"
 summary: "Sherlock from HackTheBox about unauthorized login attempts on a Confluence server. The auth.log and wtmp files are provided for investigation."
-date: "Jan 01 2025"
+date: "Jan 15 2025"
 draft: false
 tags:
 - HackTheBox
@@ -30,7 +30,7 @@ import { LANG_EN } from '/src/consts.ts';
   ]} />
 
 <div align="center">
-  <img width="500px" src="/sherlocks/brutus_images/Sherlock_logo.png" />
+  <img width="500px" src="/blog/sherlocks/brutus_images/Sherlock_logo.png" />
 </div> 
 
 ## Tasks
@@ -91,7 +91,7 @@ import { LANG_EN } from '/src/consts.ts';
 
 <CodeBlock code={"utmpdump wtmp | grep 'root'"}/>
 
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_3.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_3.png"/>
 
 - We can see that in the last line, the login from the IP 65.2.161.68 has a similar timestamp format to `YYYY-MM-DD HH:mm:SS`. There is our answer.
 
@@ -108,7 +108,7 @@ import { LANG_EN } from '/src/consts.ts';
 
 <CodeBlock code={"cat auth.log | grep '06:32'"}/>
 
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_4.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_4.png"/>
 
 - We see that one second before (06:32:44), the number 37 is assigned to the `root` user's session.
 
@@ -145,7 +145,7 @@ import { LANG_EN } from '/src/consts.ts';
     
 <CodeBlock code={"cat auth.log | grep 'session 37'"}/>
     
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_7.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_7.png"/>
 
 - The second line indicates the time when the session was closed, with the state `Removed session 37`.
 
@@ -161,7 +161,7 @@ import { LANG_EN } from '/src/consts.ts';
     
 <CodeBlock code={"cath auth.log | grep \"COMMAND\""}/>
  
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_8.png"/>   
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_8.png"/>   
 
 - One of the lines shows us the `curl` command that the attacker executed and the script URL that he downloaded.
 

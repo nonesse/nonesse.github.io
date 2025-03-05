@@ -2,7 +2,7 @@
 title: "Sherlock - Brutus - Español"
 summary: "Sherlock de HackTheBox sobre inicios de sesión no autorizados en un servidor Confluence.
  Se proporcionan los archivos auth.log y wtmp para la investigación."
-date: "Jan 01 2025"
+date: "Jan 15 2025"
 draft: false
 tags:
 - HackTheBox
@@ -30,7 +30,7 @@ import { LANG_ES } from '/src/consts.ts';
   ]} />
 
 <div align="center">
-  <img width="500px" src="/sherlocks/brutus_images/Sherlock_logo.png" />
+  <img width="500px" src="/blog/sherlocks/brutus_images/Sherlock_logo.png" />
 </div> 
 
 ## Tasks
@@ -90,7 +90,7 @@ import { LANG_ES } from '/src/consts.ts';
 
 <CodeBlock code={"utmpdump wtmp | grep 'root'"}/>
 
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_3.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_3.png"/>
 
 - Se puede apreciar que en la última línea se encuentra el inicio de sesión de la IP 65.2.161.68 con un formato similar a `YYYY-MM-DD HH:mm:SS`. Ahí está nuestra respuesta.
 
@@ -107,7 +107,7 @@ import { LANG_ES } from '/src/consts.ts';
 
 <CodeBlock code={"cat auth.log | grep '06:32'"}/>
 
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_4.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_4.png"/>
 
 - Vemos que un segundo antes (06:32:44) se le asigna el número 37 a la sesión del usuario `root`.
 
@@ -144,7 +144,7 @@ import { LANG_ES } from '/src/consts.ts';
     
 <CodeBlock code={"cat auth.log | grep 'session 37'"}/>
     
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_7.png"/>
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_7.png"/>
 
 - La segunda línea indica la hora en que se cerró la sesión, con el estado `Removed session 37`.
 
@@ -160,7 +160,7 @@ import { LANG_ES } from '/src/consts.ts';
     
 <CodeBlock code={"cath auth.log | grep \"COMMAND\""}/>
  
-<SherlockBodyImage src="/sherlocks/brutus_images/Brutus_task_8.png"/>   
+<SherlockBodyImage src="/blog/sherlocks/brutus_images/Brutus_task_8.png"/>   
 
 - Una de las líneas nos muestra que se ejecutó el comando `curl` y la URL del script que se descargó el atacante.
 
