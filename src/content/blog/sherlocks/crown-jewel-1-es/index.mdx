@@ -1,0 +1,287 @@
+---
+title: "Sherlock - Crown-Jewel-1 (Entorno Linux) - Español"
+summary: "Sherlock de HackTheBox sobre el volcado de la base de datos NTDS en un entorno de Directorio Activo de Windows, mediante el uso del servicio VSS."
+date: "Jan 19 2025"
+draft: false
+tags:
+- HackTheBox
+- Sherlock
+- Very easy
+- Tutorial
+- Linux Env.
+- Español
+---
+import SherlockBeginningTable from '/src/components/custom/SherlockBeginningTable.astro';
+import SherlockTask from '/src/components/custom/SherlockTask.astro';
+import CodeBlock from '/src/components/custom/CodeBlock.astro';
+import SherlockBodyImage from '/src/components/custom/SherlockBodyImage.astro';
+import SherlockFinalContent from '/src/components/custom/SherlockFinalContent.astro';
+import CrownJewelPreviewSteps from 'src/components/custom/CrownJewelPreviewSteps.astro'
+import { LANG_ES } from '/src/consts.ts';
+
+<SherlockBeginningTable  lang={LANG_ES} 
+  data={[
+    { content: `El controlador de dominio (DC) de Forela está bajo ataque. Se cree que la cuenta de Administrador de Dominio ha sido comprometida 
+    y se sospecha que el actor de la amenaza ha volcado la base de datos NTDS.dit en el DC. Acabamos de recibir una alerta de que se está utilizando 
+    vssadmin en el DC; dado que esto no forma parte del horario rutinario, tenemos buenas razones para creer que el atacante abusó de esta utilidad 
+    LOLBIN para obtener la joya de la corona del entorno de Dominio. Realiza un análisis de los artefactos proporcionados para una rápida evaluación 
+    y, si es posible, expulsa al atacante lo antes posible.` },
+    { content: " Microsoft-Windows-NTFS.evtx, SECURITY.evtx, SYSTEM.evtx, C/$MFT" },
+    { content: {text:"IppSec: Analyzing Event Logs and MFT Dump with Chainsaw - HTB Sherlocks - CrownJewel-1", url:"https://www.youtube.com/watch?v=lIQ-sd208FA"}}
+  ]} />
+
+<div align="center">
+  <img width="500px" src="/blog/sherlocks/crown_jewel_1_images/Sherlock_logo.png" />
+</div> 
+
+<CrownJewelPreviewSteps lang={LANG_ES} 
+        ntfs="Event 4 - File system volume mounted - 23
+            Event 9 - Volume status change - 25
+            Event 10 - File system error - 25
+            Event 142 - Error during NTFS operation - 35
+            Event 158 - Volume dismounted - 16
+            Event 159 - Volume mounted with errors - 2
+            Event 300 - File system repair started - 1
+            Event 301 - File system repair completed - 1
+            Event 302 - Volume failed integrity check - 1
+            Event 303 - NTFS metadata corruption - 1
+            Event 500 - NTFS driver error - 2"
+
+        security="Event 521 - Logon attempt failed - 1
+            Event 1101 - Audit log cleared - 1
+            Event 4616 - Time zone change detected - 1
+            Event 4662 - Object access operation performed - 11
+            Event 4688 - New process created - 12
+            Event 4696 - Audit policy change - 1
+            Event 4698 - User account expiration set - 1
+            Event 4699 - User account expiration removed - 1
+            Event 4700 - Audit policy set - 1
+            Event 4701 - Audit policy removed - 2
+            Event 4702 - Account lockout policy set - 16
+            Event 4742 - Account logon restriction change - 1
+            Event 4768 - Kerberos authentication ticket requested - 9
+            Event 4769 - Kerberos service ticket requested - 17
+            Event 4799 - A security-enabled local group membership was enumerated - 21
+            Event 4826 - User rights assignment modified - 1
+            Event 5140 - Network share accessed - 4
+            Event 5142 - Network share permission change - 6
+            Event 5379 - Group membership change - 19"
+
+        system="Event 1: System Boot - Occurs 1 time
+            Event 3: Application Error - Occurs 2 times
+            Event 6: Service Error - Occurs 11 times
+            Event 12: Network Error - Occurs 2 times
+            Event 14: Network Connection Error - Occurs 1 time
+            Event 15: File System Error - Occurs 1 time
+            Event 16: Hardware or Driver Error - Occurs 12 times
+            Event 18: Operating System Error - Occurs 1 time
+            Event 20: System Event Warning - Occurs 2 times
+            Event 24: Service Start Error - Occurs 1 time
+            Event 25: System Component Error - Occurs 1 time
+            Event 27: Configuration Error - Occurs 1 time
+            Event 32: Security Warning - Occurs 2 times
+            Event 41: Unexpected Shutdown - Occurs 1 time
+            Event 55: Disk/Filesystem Error - Occurs 8 times
+            Event 98: Network System Error - Occurs 2 times
+            Event 129: Disk Drive Error - Occurs 1 time
+            Event 139: Network Service Error - Occurs 1 time
+            Event 143: Port/Device Error - Occurs 1 time
+            Event 153: System Configuration Error - Occurs 1 time
+            Event 162: OS Warning - Occurs 1 time
+            Event 172: Critical System Error - Occurs 1 time
+            Event 238: Hardware Warning - Occurs 1 time
+            Event 1001: Application Start Error - Occurs 1 time
+            Event 1014: Network/DNS Issue - Occurs 2 times
+            Event 6005: Event Log Service Started - Occurs 1 time
+            Event 6008: Unexpected Shutdown - Occurs 1 time
+            Event 6009: System Boot Information - Occurs 1 time
+            Event 6013: Uptime Information - Occurs 1 time
+            Event 7001: Service Dependency Error - Occurs 1 time
+            Event 7026: Driver Load Error - Occurs 1 time
+            Event 7036: Service State Change - Occurs 106 times
+            Event 7040: Service Configuration Change - Occurs 1 time
+            Event 10016: COM Permission Error - Occurs 1 time
+            Event 10148: Device Error - Occurs 1 time
+            Event 10154: Network Service Error - Occurs 1 time
+            Event 14531: Network Management Error - Occurs 1 time
+            Event 14533: Network Communication Error - Occurs 1 time
+            Event 16962: Power Management Error - Occurs 1 time
+            Event 16977: Device Driver Warning - Occurs 2 times
+            Event 16983: Device Management Error - Occurs 1 time
+            Event 50036: OS Error - Occurs 2 times
+            Event 50103: System Configuration Error - Occurs 1 time
+            Event 51046: Service Start Issue - Occurs 1 time"/>
+
+## Tasks
+
+---
+
+<SherlockTask lang={LANG_ES}
+    task_number="1" 
+    task_content="Los atacantes pueden abusar de la utilidad vssadmin para crear instantáneas de volumen y luego extraer archivos sensibles como NTDS.dit 
+     para eludir los mecanismos de seguridad. Identifica el momento en el que el servicio Volume Shadow Copy entró en un estado de ejecución." 
+    hint_content="" 
+    answer="2024-05-14 03:42:16"/>
+
+- Los eventos relacionados con los servicios se encuentran en `SYSTEM.evtx`, por lo que buscaremos en nuestro `system.txt` para ver si alguno de los eventos 
+está relacionado con los cambios de estado de un servicio. 
+
+- Vemos que la descripción del evento `7036` dice `Service State Change`, parece ser el evento que buscamos.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_1_1.png"/>
+
+- Debido a que ocurre 106 veces debemos filtrar por `Volume Shadow Copy` en el campo donde se indique el nombre del servicio que en este caso es `.EventData.param1`. Para ello ejecutamos este comando:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 7036) | select(.EventData.param1 == \"Volume Shadow Copy\")'"}/>
+
+- Como resultado obtendremos el evento que buscamos. Nuestra respuesta se encuentra en el campo `.System.TimeCreated_attributes.SystemTime`. 
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_1_2.png"/>
+---
+
+
+<SherlockTask lang={LANG_ES} 
+    task_number="2" 
+    task_content="Cuando se crea una instantánea de Volume Shadow, el servicio de Volume Shadow Copy valida los privilegios utilizando la cuenta de máquina y
+     enumera los grupos de usuario. Encuentra los dos grupos de usuario que consulta el proceso de Volume Shadow Copy y la cuenta de máquina que lo hizo." 
+    hint_content="" 
+    answer="Administrators, Backup Operators, DC01$"/>
+
+- Los eventos relacionados con la seguridad, como la validación de privilegios, se encuentran en `SECURITY.evtx`, así que buscaremos en nuestro `security.txt`.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_2_1.png"/>
+
+- En este archivo podemos ver que el evento `4799` enumera miembros del grupo local. Filtraremos por ese evento cuando lo ejecute el proceso VSS.
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4799) | select(.EventData.CallerProcessName == \"C:\\\\Windows\\\\System32\\\\VSSVC.exe\")'"}/>
+    
+
+- En el resultado encontramos enumerados diferentes grupos en el campo `.EventData.TargetUserName` y la cuenta de la máquina en el `.EventData.SubjectUserName`.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_2_2.png"/>
+
+- Vamos primero a por los grupos de usuario. Podemos recuperar los valores del campo `.EventData.TargetUserName` y eliminar las repeticiones: 
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4799) | select(.EventData.CallerProcessName == \"C:\\\\Windows\\\\System32\\\\VSSVC.exe\") | .EventData.TargetUserName'|sort -u"}/>
+
+- Nos devuelve los dos grupos que nos piden: `Administrators` y `Backup Operators`. Primera parte completada, vamos a por la segunda.
+
+- Igual que antes, podemos recuperar los valores para el campo `EventData.SubjectUserName` y eliminar las repeticiones:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4799) | select(.EventData.CallerProcessName == \"C:\\\\Windows\\\\System32\\\\VSSVC.exe\") | .EventData.SubjectUserName'|sort -u"}/>
+
+- El resultado que nos devuelve es `DC01$`. Ya tenemos la respuesta completa.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="3" 
+    task_content="Identifica el Process ID (en decimal) del proceso del servicio Volume Shadow Copy." 
+    hint_content="" 
+    answer="4496"/>
+
+- Este número se encuentra en hexadecimal en el campo `.EventData.CallerProcessId` para el `.EventData.CallerProcessName == C:\\Windows\\System32\\VSSVC.exe`: 
+    - `0x1190`
+
+- Utilizamos python para convertir ese valor a decimal: 
+<CodeBlock code={"python"}/>
+
+- Pegamos el valor y pulsamos enter, y nos devolverá el Process ID en decimal:
+	- `4496`
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_3.png"/>
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="4" 
+    task_content="Encuentra el valor de ID/GUID de volumen asignado a la instantánea de Shadow Copy cuando fue montada." 
+    hint_content="" 
+    answer="{06c4a997-cca8-11ed-a90f-000c295644f9}"/>
+
+- Los eventos relacionados con los archivos y volúmenes se encuentran en `NTFS.evtx`, así que miraremos nuestro `ntfs.txt`.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_4_1.png"/>
+
+- El evento `4` tiene como descripción `File system volume mounted`. Filtraremos por ese `EventID`:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4)'"}/>
+
+- El comando nos devuelve una serie de eventos, y podemos ver que el último está relacionado con `Volume Shadow Copy`.
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_4_2.png"/>
+
+- Para asegurarnos de que no existen más eventos con `.EventData.DeviceName = "\\Device\\HarddiskVolumeShadowCopy1"`, podemos recuperar el valor de `.EventData.VolumeCorrelationId` para ese `DeviceName`, que es el campo por el que nos preguntan, y eliminar las repeticiones:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.EventData.DeviceName == \"\\\\Device\\\\HarddiskVolumeShadowCopy1\")| .EventData.VolumeCorrelationId' |sort -u"}/>
+
+- Este comando nos devolverá un único `VolumeCorrelationId` confirmándonos que es el que buscamos.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="5" 
+    task_content="Identifica la ruta completa de la base de datos NTDS volcada en el disco." 
+    hint_content="" 
+    answer="C:\Users\Administrator\Documents\backup_sync_Dc\Ntds.dit"/>
+
+- El archivo $MFT actúa como una base de datos que contiene información sobre todos los archivos y directorios en una partición NTFS. Ahí se encuentra nuestra respuesta.
+
+- Necesitamos convertir este archivo a un formato con el que podamos trabajar, por lo que utilizaremos de nuevo `Chainsaw` para crear un JSON.
+
+- Primero debemos entrar en el directorio `C` y cambiar el nombre al archivo para evitar utilizar el símbolo del dólar `$`:
+<CodeBlock code={"mv $MFT mtf.bin"}/>
+
+- Después convertimos el archivo a formato JSON con `Chainsaw`: 
+<CodeBlock code={"/opt/chainsaw/chainsaw dump mft.bin --json > files.json "}/>    
+
+- Ahora que tenemos un formato con el que podemos trabajar, filtramos por `ntds.dit`:
+<CodeBlock code={"cat files.json | grep -i ntds.dit"}/>    
+    
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_5_1.png"/>
+
+- Ya conocemos el nombre del campo donde se almacena la ruta completa, `.FullPath`, así que buscaremos todas las entradas que contengan el texto `ntds.dit` en ese campo:
+<CodeBlock code={"cat files.json | jq '.[] | select(.FullPath | test(\"ntds.dit\")) | .FullPath'"}/>    
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_5_2.png"/>
+
+- De todas las rutas, la más sospechosa es `Users/Administrator/Documents/backup_sync_dc/ntds.dit` por varios motivos:
+    1. A primera vista no parece una ubicación muy segura para una base de datos crítica como `ntds.dit`.
+    2. No es la ubicación predeterminada para la base de datos `ntds.dit`, la ubicación por defecto es `Windows/NTDS/ntds.dit`.
+    3. El nombre del directorio `backup_sync_dc` nos sugiere que un atacante intenta hacer un `back up` de algo relacionado con el Controlador de Dominio (DC).
+
+- Esa es nuestra respuesta.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="6" 
+    task_content="¿Cuándo se creó la nueva ntds.dit volcada en el disco?" 
+    hint_content="" 
+    answer="2024-05-14 03:44:22"/>
+
+- Esta información se almacena en el campo `.StandardInfoCreated` y la podemos recuperar con:
+<CodeBlock code={"cat files.json | jq '.[] | select(.FullPath == \"Users/Administrator/Documents/backup_sync_dc/ntds.dit\") | .StandardInfoCreated'"}/>  
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="7" 
+    task_content="También se volcó un hive del registro junto con la base de datos NTDS. ¿Qué hive del registro fue volcado y cuál es su tamaño en bytes?" 
+    hint_content="En el archivo de resultados del MFT, filtra por la ruta de carpeta identificada donde el atacante volcó la base de datos NTDS. 
+    Esto mostrará cualquier otro archivo creado en esa ruta también." 
+    answer="SYSTEM, 17563648"/>
+
+- Los hive del registro suelen ser archivos sin extensión y pueden tener nombres como `SYSTEM`, `SECURITY`, `SAM`...
+
+- Si se volcó un hive del registro junto con la base de datos NTDS, es posible que se encuentre en el mismo directorio `backup_sync_dc`.
+
+- Buscamos las entradas con ese nombre recuperando solo el `.FullPath` para ver si algún archivo tiene aspecto de hive: 
+<CodeBlock code={"cat files.json | jq '.[] | select(.FullPath | test(\"backup_sync_dc\")) | .FullPath'|sort -u"}/>  
+    
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_7_1.png"/>
+
+- De todos los resultados el único que tiene aspecto de hive es `"Users/Administrator/Documents/backup_sync_dc/SYSTEM"`. Accedemos al archivo para ver su información: 
+<CodeBlock code={"cat files.json | jq '.[] | select(.FullPath == \"Users/Administrator/Documents/backup_sync_dc/SYSTEM\")'"}/>  
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_1_images/CrownJewel1_task_7_2.png"/>
+
+- La respuesta será `SYSTEM` y el tamaño del archivo se encuentra en `.FileSize`.
+
+---
+
+<SherlockFinalContent lang={LANG_ES}/>
+---

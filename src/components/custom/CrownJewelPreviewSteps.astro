@@ -1,0 +1,97 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+import { LANG_EN, LANG_ES } from "@consts";
+const { lang = LANG_EN, ntfs, security, system} = Astro.props;
+---
+
+<details>
+    <summary>{lang  === LANG_ES ? 'Pasos Previos' :'Previous Steps'}</summary>
+    
+<h3>1. {lang  === LANG_ES ? 'Convertir los archivos .evtx a JSON para poder trabajar con ellos.' : 'Convert the .evtx files to JSON format so that they can be worked with.'}</h3>
+<ul>
+    <li>{lang === LANG_ES ? 'En mi caso he utilizado la herramienta' : 'In my case, I used the tool'} <a href="https://github.com/WithSecureLabs/chainsaw" target="_blank">`Chainsaw`</a>.</li>
+    <li>
+        {lang === LANG_ES ? 
+        'Para utilizar esta herramienta debemos situarnos en el directorio donde se encuentran nuestros archivos `.evtx` y ejecutar este comando (yo ubiqué `Chainsaw` en `/opt`)'
+        : 
+        'To use this tool, we need to navigate to the directory where our .evtx files are located and run this command (I placed Chainsaw in /opt).'}
+    </li>
+</ul>
+
+<CodeBlock code="/opt/chainsaw/chainsaw dump *.evtx --json > events.json"/>
+
+<h3>2. {lang === LANG_ES ? 'Disponer de la herramienta jq para hacer consultas en archivos JSON' : 'Have the jq tool available to query JSON files'}</h3>
+<ul>
+    <li>
+        {lang === LANG_ES ?
+        'Con `jq` podemos extraer información específica de archivos JSON mediante la aplicación de filtros.' 
+        : 
+        'With `jq` we can extract specific information from JSON by applying different filters.'} 
+    </li>
+    <li>
+        {lang === LANG_ES ?
+        'Utilizando esta herramienta podremos consultar nuestro JSON de forma anidada. Por ejemplo, con este archivo llamado `product.json`'
+        :
+        'Using this tool we will can query our JSON in a nested way. For example, with this file named `product.json`:'}
+    </li>
+</ul>
+<CodeBlock code={'{"product":\n\t{\n\t"productID": 101,\n\t"productName": "Wireless Mouse",\n\t"dimensions": {\n\t\t"width": "2.5 inches",\n\t\t"height": "1.5 inches",\n\t\t"depth": "4 inches"\n\t\t}\n\t}\n}'} lang="json"/>
+<ul>
+    <li>
+        {lang === LANG_ES ?
+        'Si queremos acceder al valor del campo `depth` tendremos que utilizar un comando como este:' 
+        : 
+        'If we want to access of the `depth` field value we will have to use a command like this:'}</li>
+</ul>
+
+<CodeBlock code={"cat product.json | jq '.product.dimensions.depth'"}/>
+
+<p class="pl-8">{lang === LANG_ES ? 'o':'or'}</p>
+
+<CodeBlock code={"cat product.json | jq '.product | .dimensions.depth'"}/>
+
+<ul>
+    <li>{lang === LANG_ES ? 'Y ese comando nos devolverá el valor:':'And that command will return the value:'} <b>"4 inches"</b>.</li>
+    <li>{lang === LANG_ES ? 'Para más información':'For more info' }: <a href="https://www.baeldung.com/linux/jq-command-json" target="_blank">`Guide to Linux jq Command for JSON Processing`</a>.</li>
+</ul>
+
+<h3>3. {lang === LANG_ES ? 'Crear archivos de texto para cada archivo .evtx, enumerando todos los eventos que se han disparado' : 'Create text files for each .evtx file, listing all the triggered events.'}</h3>
+<ul>
+    <li>
+        {lang === LANG_ES ? 
+        'Esto nos servirá de ayuda para tener una visión general de qué eventos se han disparado, su descripción y las veces que han ocurrido.'
+        :
+        'This helps us to have an overview of what events have been triggered, their descriptions, and how many times they have occurred.'}
+    </li>
+    <li>
+        {lang === LANG_ES ?
+        'Para ello, recuperaremos los `EventID`, correspondientes a cada archivo `.evtx`, de nuestro `events.json` y haremos una petición rápida a `ChatGPT` para que nos devuelva los datos que necesitamos en este formato:'
+        :
+        'To do this, we will retrieve the EventID, corresponding to each `.evtx` file, from our `events.json` and make a quick request to `ChatGPT` to get the data we need in this format:'} </li>
+        <ul><li>{lang === LANG_ES ?'`EventID: Descripción - Número de veces que ocurren`':'`EventID: Description - Number of times it occurs`'}</li></ul>
+    <li>
+        {lang === LANG_ES ?
+        'Podemos recuperar estos eventos con este comando, sustituyendo en cada caso el valor de `.System.Channel` por "Microsoft-Windows-Ntfs/Operational", "System" y "Security":'
+        :
+        'We can retrieve the events using this command, replacing the value of `.System.Channel` in each case with "Microsoft-Windows-Ntfs/Operational", "System" and "Security":'}
+    </li>
+    <CodeBlock code={"cat events.json | jq '.[].Event | select(.System.Channel == \"Microsoft-Windows-Ntfs/Operational\") | .System.EventID'|sort |uniq -c | awk '{print $2\":\"$1}'|sort -n"}/>
+</ul>
+<h4>{lang === LANG_ES ? 'Estos son los archivos de eventos .txt que he utilizado' : 'These are the .txt events files I have used'}</h4>
+    <div class="pl-8">
+        <details> 
+            <summary>ntfs.txt:</summary>
+            <CodeBlock code={ntfs} lang="plaintext"/>
+        </details>
+
+        <details> 
+            <summary>security.txt:</summary>
+            <CodeBlock code={security} lang="plaintext"/>
+        </details>
+
+        <details> 
+            <summary>system.txt:</summary>
+            <CodeBlock code={system} lang="plaintext"/>
+        </details>
+    </div>
+</details>
