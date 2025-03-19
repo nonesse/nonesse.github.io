@@ -1,0 +1,176 @@
+---
+title: "Sherlock - Crown-Jewel-2 (Linux Env.) - English"
+summary: "Sherlock from HackTheBox about dumping the NTDS database in a Windows Active Directory environment."
+date: "Mar 19 2025"
+draft: false
+tags:
+- HackTheBox
+- Sherlock
+- Very easy
+- Tutorial
+- Linux Env.
+- English
+---
+import SherlockBeginningTable from '/src/components/custom/SherlockBeginningTable.astro';
+import SherlockTask from '/src/components/custom/SherlockTask.astro';
+import CodeBlock from '/src/components/custom/CodeBlock.astro';
+import SherlockBodyImage from '/src/components/custom/SherlockBodyImage.astro';
+import SherlockFinalContent from '/src/components/custom/SherlockFinalContent.astro';
+import CrownJewelPreviewSteps from 'src/components/custom/CrownJewelPreviewSteps.astro'
+
+<SherlockBeginningTable   
+  data={[
+    { content: `Forela's Domain environment is pure chaos. Just got another alert from the Domain controller of NTDS.dit database being exfiltrated. 
+    Just one day prior you responded to an alert on the same domain controller where an attacker dumped NTDS.dit via vssadmin utility. 
+    However, you managed to delete the dumped files kick the attacker out of the DC, and restore a clean snapshot. 
+    Now they again managed to access DC with a domain admin account with their persistent access in the environment. 
+    This time they are abusing ntdsutil to dump the database. 
+    Help Forela in these chaotic times!!` },
+    { content: "APPLICATION.evtx, SECURITY.evtx , SYSTEM.evtx" },
+    { content: {text:"NTDS dumping attack detection", url:"https://www.hackthebox.com/blog/ntds-dumping-attack-detection"}}
+  ]} />
+
+<div align="center">
+  <img width="500px" src="/blog/sherlocks/crown_jewel_2_images/Sherlock_logo.png" />
+</div> 
+
+<CrownJewelPreviewSteps />
+
+## Tasks
+
+---
+
+<SherlockTask 
+    task_number="1" 
+    task_content="When utilizing ntdsutil.exe to dump NTDS on disk, it simultaneously employs the Microsoft Shadow Copy Service. 
+    What is the most recent timestamp at which this service entered the running state, signifying the possible initiation of the NTDS dumping process?" 
+    hint_content="In the System event log, filter for Event ID 7036 and look for the mentioned service name. Once spotted, go to the details tab, and expand the System option to get the event time in UTC." 
+    answer="2024-05-15 05:39:55"/>
+
+- From resolving `CrownJewel-1`, we know that the event responsible for changing the states of a service is `7036` and that the name of the service is `Volume Shadow Copy`.
+
+- We will use this command to retrieve all the timestamps of that event for that service and remove the duplicates:
+
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 7036) | select(.EventData.param1 == \"Volume Shadow Copy\") | .System.TimeCreated_attributes.SystemTime'|sort -u"}/>
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_1.png"/>
+
+- Now we will only need to keep the most recent timestamp.
+
+---
+
+
+<SherlockTask  
+    task_number="2" 
+    task_content="Identify the full path of the dumped NTDS file." 
+    hint_content="In Application Event Log, filter for Event ID 325. This Event ID is recorded whenever a new database (new copy of NTDS.dit database) is created by the database engine." 
+    answer="C:\Windows\Temp\dump_tmp\Active Directory\ntds.dit"/>
+
+- First, we will filter by `ntds.dit`:
+
+<CodeBlock code={"cat events.json | grep -i ntds.dit"}/>
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_2.png"/>
+
+- Any path different from `Windows/NTDS/ntds.dit` (the default path for `ntds.dit`) is indicative of malicious behavior. 
+
+- Of all of them, `C:\\Windows\\Temp\\dump_tmp\\Active Directory\\ntds.dit` seems to be the one, as naming a directory dump_tmp suggests the intention to create a temporary dump.
+
+---
+
+<SherlockTask  
+    task_number="3" 
+    task_content="When was the database dump created on the disk?" 
+    hint_content="This would be the time of the same event when database copy was created(Event ID 325)." 
+    answer="2024-05-15 05:39:56"/>
+
+- We know the location where the database was dumped, so we will filter the events by the `dump_tmp` directory:
+
+<CodeBlock code={"cat events.json | jq '.[].Event' -c | grep -i dump_tmp | jq ."}/>
+
+- It will return three events with IDs `330, 325, 327`.
+
+- Since event `325` is the one that is triggered when the new database is created, we will use its timestamp.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_3.png"/>
+---
+
+<SherlockTask  
+    task_number="4" 
+    task_content="When was the newly dumped database considered complete and ready for use?" 
+    hint_content="'In Application Event Log, filter for Event ID 327. This Event ID is recorded whenever a newly created database (new copy of NTDS.dit database) 
+    is detached by the database engine and marked ready to use.'"
+    answer="2024-05-15 05:39:58"/>
+
+- After event `325`, event `327` is executed, which indicates that the database has been detached, so the answer should be the timestamp of event `327` that we retrieved earlier.
+
+---
+
+<SherlockTask  
+    task_number="5" 
+    task_content="Event logs use event sources to track events coming from different sources. Which event source provides database status data like creation and detachment?" 
+    hint_content="Look at the Event source in Events from question 2 to 4." 
+    answer="ESENT"/>
+
+- The event source that provides the status of the database is `ESENT`, as we can see in the events we retrieved in question 3.
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_5.png"/>
+
+---
+
+<SherlockTask  
+    task_number="6" 
+    task_content="When ntdsutil.exe is used to dump the database, it enumerates certain user groups to validate the privileges of the account being used. Which two groups are enumerated by the ntdsutil.exe process? 
+    Give the groups in alphabetical order joined by comma space." 
+    hint_content="In Security Logs, filter for Event ID 4799 . Look for Events in between the timeframe of incident identified so far. 
+    Identify the events where process name is C:\Windows\System32\ntdsutil.exe ." 
+    answer="Administrators, Backup Operators"/>
+
+- The process that is triggered when groups are enumerated is `4799`.
+
+- We will retrieve the names of the groups displayed in the `.EventData.TargetUserName` field, filtering by event `4799` when is called by `ntdsutil.exe`:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4799) | select(.EventData.CallerProcessName | test(\"ntdsutil.exe\")) | .EventData.TargetUserName'|sort -u"}/>
+
+- It will return:
+	- "Administrators"
+	- "Backup Operators"
+
+---
+
+<SherlockTask  
+    task_number="7" 
+    task_content="Now you are tasked to find the Login Time for the malicious Session. Using the Logon ID, find the Time when the user logon session started." 
+    hint_content="Since this is a domain environment we would want to use Kerberos events to find the timestamp. 
+    Filter for Event ID 4768 and 4769. From here identify the Event Where Account Name is a user account name and not any service or machine account (Starting with a $) in the event 4768. 
+    This event will be immiediatly followed by a 4769 event with the same Subject Username. Now add another event id 5379 in the filter. These new events have the Logon ID we are tracking. 
+    Notice that timestamp of all these events are same as they happened right after each other. This will be the logon time" 
+    answer="2024-05-15 05:36:31"/>
+
+- As the hint states, authentication in domain environments is carried out with `Kerberos`, and it is associated with events `4768` and `4769`.
+
+- First, we look for a username in event `4768` that is neither a service nor a machine:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4768) | .EventData.TargetUserName'"}/>
+
+- This returns:
+    - "DC01$"
+	- "DC01$"
+	- "Administrator"
+
+- The only one with a username is `Administrator`.
+
+- We will look for the `4768` event of `Administrator`:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4768) | select(.EventData.TargetUserName == \"Administrator\")'"}/>
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_7.png"/>
+
+- We keep the timestamp down to the seconds, as the hint tells us that events `4768`, `4769`, and `5379` are executed sequentially (one immediately after the other).
+
+- Now we need to search for the events that contain the logon ID, which are the `5379` events.
+
+- We filter by the previous timestamp.
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 5379) | select(.System.TimeCreated_attributes.SystemTime | test(\"2024-05-15T05:36:31\"))'"}/>
+
+- It returns 3 events with logon ID `0x8de3d` (in the `SubjectLogonId` field) and all with the same timestamp, the same one we used to filter. That is the answer to the question.
+
+---
+
+<SherlockFinalContent />
+---

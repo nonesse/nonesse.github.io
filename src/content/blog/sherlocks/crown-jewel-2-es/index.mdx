@@ -1,0 +1,181 @@
+---
+title: "Sherlock - Crown-Jewel-2 (Entorno Linux) - Español"
+summary: "Sherlock de HackTheBox sobre el volcado de la base de datos NTDS en un entorno de Directorio Activo de Windows."
+date: "Mar 19 2025"
+draft: false
+tags:
+- HackTheBox
+- Sherlock
+- Very easy
+- Tutorial
+- Linux Env.
+- Español
+---
+import SherlockBeginningTable from '/src/components/custom/SherlockBeginningTable.astro';
+import SherlockTask from '/src/components/custom/SherlockTask.astro';
+import CodeBlock from '/src/components/custom/CodeBlock.astro';
+import SherlockBodyImage from '/src/components/custom/SherlockBodyImage.astro';
+import SherlockFinalContent from '/src/components/custom/SherlockFinalContent.astro';
+import CrownJewelPreviewSteps from 'src/components/custom/CrownJewelPreviewSteps.astro'
+import { LANG_ES } from '/src/consts.ts';
+
+<SherlockBeginningTable  lang={LANG_ES} 
+  data={[
+    { content: `El entorno del dominio de Forela es un caos puro. Acaba de recibir otra alerta del controlador de dominio sobre la exfiltración de la base de datos NTDS.dit. 
+    Solo un día antes, respondiste a una alerta en el mismo controlador de dominio donde un atacante volcó NTDS.dit a través de la utilidad vssadmin. 
+    Sin embargo, lograste eliminar los archivos volcados, expulsar al atacante del controlador de dominio y restaurar una instantánea limpia. 
+    Ahora, nuevamente han logrado acceder al controlador de dominio con una cuenta de administrador de dominio gracias a su acceso persistente en el entorno. 
+    Esta vez están abusando de ntdsutil para volcar la base de datos. ¡Ayuda a Forela en estos tiempos caóticos!` },
+    { content: "APPLICATION.evtx, SECURITY.evtx , SYSTEM.evtx" },
+    { content: {text:"NTDS dumping attack detection", url:"https://www.hackthebox.com/blog/ntds-dumping-attack-detection"}}
+  ]} />
+
+<div align="center">
+  <img width="500px" src="/blog/sherlocks/crown_jewel_2_images/Sherlock_logo.png" />
+</div> 
+
+<CrownJewelPreviewSteps lang={LANG_ES}/>
+
+## Tasks
+
+---
+
+<SherlockTask lang={LANG_ES}
+    task_number="1" 
+    task_content="Al utilizar ntdsutil.exe para volcar NTDS en el disco, este emplea simultáneamente el Servicio Shadow Copy de Microsoft. 
+    ¿Cuál es el timestamp más reciente en el que este servicio entró en estado de ejecución, lo que significaría el posible inicio del proceso de volcado de NTDS?" 
+    hint_content="En los logs de eventos de sistema, filtra por el ID de evento 7036 y busca el nombre del servicio mencionado. Una vez que lo encuentres, 
+    ve a la pestaña de detalles y expande la opción del sistema para obtener la hora del evento en UTC." 
+    answer="2024-05-15 05:39:55"/>
+
+- De resolver `CrownJewel-1` sabemos que el evento que se encarga de cambiar los estados de un servicio es el `7036` y que el nombre del servicio es `Volume Shadow Copy`. 
+
+- Utilizaremos este comando para recuperar todos los timestamp de ese evento para ese servicio y eliminaremos las repeticiones:
+
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 7036) | select(.EventData.param1 == \"Volume Shadow Copy\") | .System.TimeCreated_attributes.SystemTime'|sort -u"}/>
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_1.png"/>
+
+- Ahora solo tendremos que quedarnos con el timestamp más reciente.
+
+---
+
+
+<SherlockTask lang={LANG_ES} 
+    task_number="2" 
+    task_content="Identifica la ruta completa del volcado del archivo NTDS" 
+    hint_content="En los logs de eventos de aplicación, filtra por el Event ID 325. Este evento se registra cada vez que
+    se crea una nueva base de datos (nueva copia de la base de datos NTDS.dit) por el motor de la base de datos." 
+    answer="C:\Windows\Temp\dump_tmp\Active Directory\ntds.dit"/>
+
+- Primero filtraremos por `ntds.dit`:
+
+<CodeBlock code={"cat events.json | grep -i ntds.dit"}/>
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_2.png"/>
+
+- Cualquier ruta diferente de `Windows/NTDS/ntds.dit` (ruta por defecto para `ntds.dit`) es indicativo de un comportamiento malicioso. 
+
+- De todas ellas, `C:\\Windows\\Temp\\dump_tmp\\Active Directory\\ntds.dit` parece ser la indicada, llamar a un directorio `dump_tmp` sugiere la intención de hacer un volcado temporal.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="3" 
+    task_content="¿Cuándo se creó el volcado de la base de datos en el disco?" 
+    hint_content="Podría ser el mismo momento del evento cuando se creó la copia de la base de datos(Event ID 325)" 
+    answer="2024-05-15 05:39:56"/>
+
+- Sabemos la ubicación donde se volcó la base de datos, así que filtraremos los eventos por el directorio `dump_tmp`:
+
+<CodeBlock code={"cat events.json | jq '.[].Event' -c | grep -i dump_tmp | jq ."}/>
+
+- Nos devolverá tres eventos con ID `330, 325, 327`. 
+
+- Como el evento `325` es el que se activa cuando se crea la nueva base de datos, utilizaremos su timestamp.
+
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_3.png"/>
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="4" 
+    task_content="¿Cuándo se consideró el nuevo volcado de la base de datos completo y listo para usar?" 
+    hint_content="En los logs de eventos de aplicación, filtra por el Event ID 327. Este evento se registra cada vez que una nueva base de datos 
+    (una nueva copia de la base de datos NTDS.dit) es desacoplada por el motor de la base de datos y marcada como lista para usar."
+    answer="2024-05-15 05:39:58"/>
+
+- Después del evento `325` se ejecuta el `327` que es el que indica que la base de datos ha sido desacoplada,
+ por lo que la respuesta debería ser el timestamp del evento `327`que hemos recuperado anteriormente.
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="5" 
+    task_content="Los logs de eventos utilizan fuentes de eventos para rastrear eventos que provienen de diferentes orígenes. 
+    ¿Qué fuente de eventos proporciona datos sobre el estado de la base de datos, como la creación y el desacoplamiento?" 
+    hint_content="Mira la fuente de Evento en los eventos de las preguntas 2 a 4." 
+    answer="ESENT"/>
+
+- La fuente de eventos que proporciona estatus de la base de datos es `ESENT`, como podemos ver en los eventos que recuperamos en la pregunta 3.
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_5.png"/>
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="6" 
+    task_content="Cuando se utiliza ntdsutil.exe para hacer un volcado de la base de datos, enumera una serie de grupos de usuario para validar 
+    los privilegios de la cuenta que está siendo usada. ¿Qué dos grupos se enumeran por el proceso ntdsutil.exe? Proporciona los grupos en orden 
+    alfabético separados por coma y espacio." 
+    hint_content="En los logs de seguridad, filtra por el ID de evento 4799. Busca eventos dentro del espacio de tiempo del incidente identificado hasta ahora. 
+    Identifica los eventos donde el nombre del proceso es C:\Windows\System32\ntdsutil.exe." 
+    answer="Administrators, Backup Operators"/>
+
+- El proceso que se activa cuando se enumeran grupos es el `4799`.
+
+- Recuperaremos los nombres de los grupos que se muestran en el campo `.EventData.TargetUserName`, filtrando por el evento `4799` cuando es llamado por `ntdsutil.exe`:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4799) | select(.EventData.CallerProcessName | test(\"ntdsutil.exe\")) | .EventData.TargetUserName'|sort -u"}/>
+
+- Nos devolverá:
+	- "Administrators"
+	- "Backup Operators"
+
+---
+
+<SherlockTask lang={LANG_ES} 
+    task_number="7" 
+    task_content="Ahora se te ha encomendado la tarea de encontrar el momento de inicio de sesión de la sesión maliciosa. 
+    Usando el ID de inicio de sesión, encuentra el momento en el que la sesión de usuario comenzó." 
+    hint_content="Dado que este es un entorno de dominio, querríamos usar eventos de Kerberos para encontrar el timestamp. 
+    Filtra por los eventos con ID `4768` y `4769`. A partir de aquí, identifica el evento donde el nombre de la cuenta es un nombre de cuenta de usuario y no una cuenta de servicio o de máquina (que comienza con un $) en el evento `4768`. 
+    Este evento será seguido inmediatamente por un evento `4769` con el mismo nombre de usuario del sujeto. Ahora agrega otro envento al filtro, el `5379`. Estos nuevos eventos tienen el ID de inicio de sesión que estamos rastreando. 
+    Observa que el timestamp de todos estos eventos es el mismo, ya que ocurrieron uno después del otro. Este será el tiempo de inicio de sesión." 
+    answer="2024-05-15 05:36:31"/>
+
+- Tal y como dice la pista, la autenticación en entornos de dominio se lleva a cabo con `Kerberos`, y se asocia con los eventos `4768` y `4769`. 
+
+- Primero buscamos en los eventos `4768` un nombre de usuario que no sea ni un servicio ni una máquina:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4768) | .EventData.TargetUserName'"}/>
+
+- Esto no devuelve:
+    - "DC01$"
+	- "DC01$"
+	- "Administrator"
+
+- El único que tiene nombre de usuario es `Administrator`.
+
+- Buscaremos el evento `4768` de `Administrador`:
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 4768) | select(.EventData.TargetUserName == \"Administrator\")'"}/>
+<SherlockBodyImage src="/blog/sherlocks/crown_jewel_2_images/CrownJewel2_task_7.png"/>
+
+- Nos quedamos con el timestamp hasta los segundos, ya que según nos dice la pista, los eventos `4768`, `4769` y `5379` se ejecutan de forma secuencial (uno inmediatamente después del otro).
+
+- Ahora necesitamos buscar los eventos que contengan el ID de inicio de sesion, que son los eventos `5379`.
+
+- Filtramos por el timestamp anterior.
+<CodeBlock code={"cat events.json | jq '.[].Event | select(.System.EventID == 5379) | select(.System.TimeCreated_attributes.SystemTime | test(\"2024-05-15T05:36:31\"))'"}/>
+
+- Esto nos devuelve 3 eventos con ID de sesión `0x8de3d` (campo `SubjectLogonId`) y todos con el mismo timestamp, el mismo que hemos utilizado para filtar. Esa es la respuesta a la pregunta.
+---
+
+<SherlockFinalContent lang={LANG_ES}/>
+---

@@ -1,7 +1,7 @@
 ---
 import CodeBlock from "./CodeBlock.astro";
 import { LANG_EN, LANG_ES } from "@consts";
-const { lang = LANG_EN, ntfs, security, system} = Astro.props;
+const { lang = LANG_EN, ntfs = "", security = "", system = ""} = Astro.props;
 ---
 
 <details>
@@ -50,6 +50,7 @@ const { lang = LANG_EN, ntfs, security, system} = Astro.props;
 
 <CodeBlock code={"cat product.json | jq '.product | .dimensions.depth'"}/>
 
+{security && (
 <ul>
     <li>{lang === LANG_ES ? 'Y ese comando nos devolverá el valor:':'And that command will return the value:'} <b>"4 inches"</b>.</li>
     <li>{lang === LANG_ES ? 'Para más información':'For more info' }: <a href="https://www.baeldung.com/linux/jq-command-json" target="_blank">`Guide to Linux jq Command for JSON Processing`</a>.</li>
@@ -93,5 +94,5 @@ const { lang = LANG_EN, ntfs, security, system} = Astro.props;
             <summary>system.txt:</summary>
             <CodeBlock code={system} lang="plaintext"/>
         </details>
-    </div>
+    </div>)}
 </details>
