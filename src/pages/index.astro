@@ -82,13 +82,13 @@ const stack = [
       <div class='relative w-full h-full flex items-center justify-center'>
         <div class='p-5 text-center'>
           <p class='animated text-lg md:text-xl lg:text-2xl font-semibold opacity-75'>
-            Hello, I am ...
+            Welcome to...
           </p>
           <p class='animated text-2xl md:text-3xl lg:text-4xl font-bold uppercase text-black dark:text-white'>
-            nonesse
+            {SITE.TITLE}
           </p>
           <p class='animated text-sm md:text-base lg:text-lg opacity-75'>
-            Welcome to {SITE.TITLE}, my hidden corner on the Internet.
+            My hidden corner on the Internet.
           </p>
           <div id="ctaButtons" class='animated flex flex-wrap gap-4 justify-center mt-5'>
             <a href='/blog' class='py-2 px-4 rounded truncate text-xs md:text-sm lg:text-base bg-black dark:bg-white text-white dark:text-black hover:opacity-75 blend'>
@@ -109,27 +109,18 @@ const stack = [
       <!-- About Section  -->
       <section class="animatde">
         <article>
-          <p>I am a <b>software developer</b>  with 2+ years of experience and a strong passion for <b>cybersecurity</b>, which I pursue professionally.</p>
-          <p>I love exploring techniques for fortifying systems and automating the process for greater efficiency.
-            I am motivated by finding tailored solutions to challenging problems. </p>
-          <p>My goal is to learn everything about systems protection to help others stay safe by preventing incidents and responding to them.</p>
+          <p>I am a <b>software developer</b> with a strong passion for <b>cybersecurity</b>. I love learning how computer systems work, how communications function, and the ways to protect and exploit them.</p>
+          <p>Feel free to explore my blog; it may be helpful to you. And if you're curious, take a look at my projects; you might find them useful.</p>
           <hr>
-          <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
+          <!--<div class="flex flex-wrap items-center justify-center gap-2 mt-5">
             {stack.map(item => (
               <StackCardNoHref
                 text={item.text}
                 icon={item.icon}
               />
             ))}
-          </div>
+          </div>-->
           <div>
-          <hr>
-          <p class="md:text-xl font-semibold">Latest Achievements</p>
-          <ul >
-            <li>Obtained <b>CompTIA Security+ SY0-701</b> certification.</li>
-            <li>Completed my <b>investment Android application</b>.</li>
-          </ul>
-          <p class='md:text-xl lg:text-2xl font-semibold opacity-90'>Currently seeking opportunities in Cybersecurity!</p>
         </article>
       </section>
 
