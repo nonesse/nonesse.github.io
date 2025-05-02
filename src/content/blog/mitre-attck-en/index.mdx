@@ -1,0 +1,120 @@
+---
+title: "Master the adversary: Understand MITRE ATT&CK and strengthen your defensive strategy"
+summary: "Discover what MITRE ATT&CK is, how it works, and why it is a key tool to enhance your defensive skills."
+date: "May 2 2025"
+draft: false
+tags:
+- Cyber Intelligence
+- Threat Analysis
+- English
+---
+
+#### In this article
+1. [Context of MITRE ATT&CK](#1-context-of-mitre-attck)
+2. [What is MITRE ATT&CK?](#2-what-is-mitre-attck)
+3. [What is ATT&CK used for in the Blue Team?](#3-what-is-attck-used-for-in-the-blue-team)
+4. [Practical Example: T1566.001 - Spearphishing Attachment](#4-practical-example-t1566001---spearphishing-attachment)  
+5. [Key Tools and Resources for Working with ATT&CK](#5-key-tools-and-resources-for-working-with-attck)
+6. [Strengthening Your Strategy](#6-strengthening-your-strategy)
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>1. Context of MITRE ATT&CK</b></a>
+
+In the world of defensive cybersecurity, one of the keys to success is understanding how attackers operate. It's not enough to just have security tools; it's crucial to know what adversaries are after and how they achieve their objectives. This is where the MITRE ATT&CK framework comes into play. Based on real-world observations, ATT&CK helps Blue Team professionals identify, classify, and better defend against the techniques used by malicious actors.
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>2. What is MITRE ATT&CK?</b></a>
+
+MITRE ATT&CK (Adversarial Tactics, Techniques, and Common Knowledge) is a continuously updated and structured database that documents the tactics, techniques and sub-techniques used by attackers in the real world. It was developed by the MITRE organization as an open and accessible framework to help improve the security posture of organizations worldwide.
+
+Its main value lies in standardizing how the behavior of attackers is described, enabling clear communication between technical teams, security analysts, and strategic leaders within the organization.
+
+The model is structured in several levels:
+
+- **Tactics**: Represent the strategic objectives of the attacker during various phases of an attack. Examples: “Initial Access,” “Persistence,” “Credential Access,” “Exfiltration.”
+
+- **Techniques and Sub-techniques**: Specific methods used to achieve these tactics. For example, within “Credential Access,” we find techniques like “Brute Force” or “Credential Dumping.” Some techniques have sub-techniques that offer a higher level of detail.
+
+- **Mitigations and Detections**: ATT&CK also provides suggestions on how to prevent or detect each technique.
+
+- **Groups and Software**: Includes information about known threat groups and tools/malware associated with each technique.
+
+- **Campaigns**: ATT&CK also documents specific campaigns carried out by known groups. These campaigns include techniques and malware used, objectives, and affected sectors. This section is especially useful for understanding recurring attack patterns, seeing how tactics evolve, and better contextualizing risks for a specific industry. (Aside from being interesting to know how these operations unfold, which often seem straight out of a movie.)
+
+There are different matrices that adapt to various operating environments:
+
+- **Enterprise ATT&CK**: The most widely used, covering Windows, Linux, macOS environments, and related technologies.
+
+- **Mobile ATT&CK**: For threats affecting Android and iOS mobile devices.
+
+- **ICS ATT&CK**: Focused on industrial control systems and SCADA.
+
+This multidimensional approach allows ATT&CK to be used as a fundamental tool not only for technical defense but also for threat analysis, risk assessment, and strategic security planning.
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>3. What is ATT&CK used for in the Blue Team?</b></a>
+
+ATT&CK helps structure defense work based on how attackers think. Some practical applications include:
+
+- **Gap analysis**: Evaluating which techniques can be detected and which cannot. For example, you can check if you have detection for lateral movement (the "Lateral Movement" tactic) such as `Pass-the-Hash` or `Remote Desktop Protocol`.
+
+- **Detection design**: Creating specific alert rules based on ATT&CK techniques. For example, a Sigma rule to detect suspicious use of `cmd.exe` or `powershell.exe` with encoded arguments.
+
+- **Threat simulation**: Using frameworks like Caldera, you can emulate real adversary behaviors and see if your infrastructure can recognize the generated events.
+
+- **Risk communication**: ATT&CK allows you to translate technical threats into language understandable by other areas of the organization. For example, explaining to a security manager that there is low coverage in the “Defense Evasion” tactic can help justify new investments.
+
+- **Support for forensic analysis**: ATT&CK can be used as a framework to categorize findings during a post-incident investigation. By identifying techniques used in a compromise, it's possible to quickly contextualize which phase of the attack occurred, what tactics were applied, and which groups are likely to use them, speeding up decision-making and improving response reports.
+
+- **Detecting adversary group modus operandi**: By analyzing past incidents and observed techniques, ATT&CK allows you to link patterns with known threat groups, which helps anticipate future actions, establish hypotheses, and prepare defense measures based on specific adversary behaviors.
+
+In summary, ATT&CK offers a standardized way of thinking about defense: from the attacker's perspective. This makes it an essential tool for any defensive security analyst or engineer.
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>4. Practical Example: T1566.001 - Spearphishing Attachment</b></a>
+
+- **Tactic**: Initial Access
+- **Technique**: T1566 - Phishing
+- **Sub-technique**: T1566.001 - Spearphishing Attachment
+
+This technique involves sending emails designed to appear legitimate, containing malicious attachments (such as Office documents, PDFs, or compressed files). The goal is to trick the recipient into opening the file and activating hidden content, such as macros or scripts, which allow the attacker to execute malware on the victim's system.
+
+**How to detect it?**
+
+- Analyze email server logs for attachments with unusual extensions or enabled macros.
+- Detect processes initiated by Office applications (e.g., Word → PowerShell).
+- Correlate download events with subsequent suspicious processes.
+- Use Sigma rules to detect script execution from temporary locations.
+
+**How to prevent it?**
+
+- Implement policies that block unsigned macros in Office documents.
+- Enable protection against suspicious attachments at the email gateway.
+- Train users on social engineering tactics and how to verify suspicious emails.
+- Use EDRs that can intercept and block common spearphishing behaviors.
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>5. Key Tools and Resources for Working with ATT&CK</b></a>
+
+The ecosystem surrounding MITRE ATT&CK has been enriched with tools and resources designed to facilitate its adoption. Here are some of the most important:
+
+- **ATT&CK Navigator**: MITRE's official web tool that allows you to visualize ATT&CK techniques in an interactive matrix. You can mark detections or prioritize techniques, making it ideal for regular assessments and sharing security information between teams.
+
+- **Atomic Red Team**: A repository of unit tests (atomics) developed by Red Canary. It allows you to execute ATT&CK techniques in a controlled manner to validate whether your detection tools are responding correctly. It is compatible with Windows, Linux, and macOS, and can be easily automated.
+
+- **CALDERA**: A framework developed by MITRE that automates the emulation of adversaries in controlled environments. It executes real ATT&CK techniques, making it ideal for testing the behavior of your defenses against complex attacks.
+
+- **ATT&CK Workbench**: A tool that allows you to create, extend, and customize ATT&CK entries, perfect for organizations that need to tailor the framework to their specific needs.
+
+---
+
+#### <a href="#in-this-article" style="text-decoration: none;"><b>6. Strengthening Your Strategy</b></a>
+
+MITRE ATT&CK has become one of the most comprehensive and versatile frameworks in the field of defensive cybersecurity. Its behavior-based approach makes it a practical and powerful tool for analysts, incident response teams, and cyber intelligence professionals.
+
+Learning to use ATT&CK not only improves your ability to detect and respond to threats but also helps you better understand how attackers think, organize your knowledge in a structured way, and communicate with other professionals in the field using a common language. Understanding ATT&CK will allow you to think like an attacker, enhance your defensive skills, and add more value to any cybersecurity team.
