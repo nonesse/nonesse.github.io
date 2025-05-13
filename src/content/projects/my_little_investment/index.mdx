@@ -1,0 +1,58 @@
+---
+title: "My Little Investment"
+summary: "Aplicación Android de carácter financiero desarrollada en Kotlin con arquitectura MVVM."
+date: "May 13 2025"
+draft: false
+tags:
+- Android
+- Kotlin
+- MVVM
+- Clean Architecture
+- Finances
+repoUrl: ""
+---
+
+import Carousel from '/src/components/custom/Carousel.astro';
+
+<Carousel images={[
+    "/projects/my_little_investment/01.png",
+    "/projects/my_little_investment/02.png",
+    "/projects/my_little_investment/03.png",
+    "/projects/my_little_investment/04.png",
+    "/projects/my_little_investment/05.png",
+    "/projects/my_little_investment/06.png",
+    "/projects/my_little_investment/07.png",
+]} />
+
+My Little Investment es una aplicación Android minimalista e intuitiva, que aporta claridad al análisis de empresas, identificando si una acción está sobrevalorada o infravalorada. 
+Su objetivo es ayudar a tomar decisiones informadas a la hora de invertir.
+
+La aplicación puede calcular el precio objetivo de una acción, es decir, el valor que debería tener según sus datos financieros. Esto permite determinar el margen entre el precio actual del mercado y 
+el precio objetivo, lo que facilita evaluar si una acción representa una buena oportunidad de inversión.
+
+Además, la app incluye la funcionalidad de ordenar las valoraciones con diferentes criterios: para encontrar la mejor opción disponible, o para comparar las valoraciones de una misma empresa a lo largo del tiempo.
+
+Su desarrollo se ha guiado por los principios de la Clean Architecture y los principios SOLID, lo que garantiza una base sólida y fácilmente ampliable a futuro.  
+
+Aparte de contar con soporte de modo claro y oscuro; la interfaz es límpia e intuitiva, pensada para mostrar solo lo esencial y ayudar a centrarse en lo que importa.
+
+---
+
+### Características principales
+- Acceso rápido a información clave de cada acción.
+- Cálculo automático de precios objetivo y márgenes de cada valor.
+- Filtros para ordenar empresas por distintos criterios.
+- Interfaz límpia y minimalista, optimizada para usarse con una sola mano.
+- Actualización automática de la interfaz al cambiar los datos.
+- Modo claro y oscuro para adaptarse a cada momento del día.
+
+---
+
+### Tecnologías usadas
+
+- **Lenguaje:** Kotlin
+- **Arquitectura:** MVVM (ViewModel + LiveData), Principios Clean Architecture
+- **Inyección de dependencias:** DaggerHilt
+- **Persistencia:** Room
+- **Testing:** JUnit (Test unitarios y de integración)
+- **UI:** Material Design 3, Jetpack Compose

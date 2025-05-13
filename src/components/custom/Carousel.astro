@@ -1,0 +1,121 @@
+---
+const { images } = Astro.props;
+const validImages = Array.isArray(images) ? images : [];
+---
+
+<section class="slider-container">
+  <div class="slider">
+    
+    <div class="slides">
+      
+      {validImages.map((imageURL: string) => (
+        <div class="slide">
+          <img src={imageURL}/>
+        </div>
+      ))}
+    </div>
+
+    <div class="controls">
+      <button class="prev">&#10094;</button>
+      <button class="next">&#10095;</button>
+    </div>
+  </div>
+</section>
+
+<!-- Script para manejar el cambio de imagen al hacer clic en las flechas -->
+<script type="module">
+  const prevButton = document.querySelector('.prev');
+  const nextButton = document.querySelector('.next');
+  const slidesContainer = document.querySelector('.slides');
+  const slides = document.querySelectorAll('.slide');
+  
+  let currentSlide = 0; // Índice de la imagen actual
+
+  // Función para mostrar la siguiente imagen
+  function showNextSlide() {
+    if (currentSlide < slides.length - 1) {
+      currentSlide++;
+    } else {
+      currentSlide = 0; // Si estamos en la última, vuelve a la primera imagen
+    }
+    updateSlidePosition();
+  }
+
+  // Función para mostrar la imagen anterior
+  function showPrevSlide() {
+    if (currentSlide > 0) {
+      currentSlide--;
+    } else {
+      currentSlide = slides.length - 1; // Si estamos en la primera, va a la última imagen
+    }
+    updateSlidePosition();
+  }
+
+  // Actualiza la posición de las imágenes
+  function updateSlidePosition() {
+    const slideWidth = slides[0].clientWidth; // Obtiene el ancho de la imagen
+    slidesContainer.style.transform = `translateX(-${currentSlide * slideWidth}px)`; // Mueve el contenedor
+  }
+
+  // Event listeners para las flechas
+  prevButton.addEventListener('click', showPrevSlide);
+  nextButton.addEventListener('click', showNextSlide);
+
+  // Actualizar la posición al cargar la página
+  window.addEventListener('resize', updateSlidePosition);
+</script>
+
+<style>
+  .slider-container {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    width: 55%; /* Ajusta el ancho para hacer el slider más grande */
+    max-width: 1200px; /* Tamaño máximo del slider */
+  }
+
+  .slider {
+    position: relative;
+    display: flex;
+  }
+
+  .slides {
+    display: flex;
+    transition: transform 0.5s ease;
+  }
+
+  .slide {
+    min-width: 100%;
+    height: 100%;
+  }
+
+  .slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Hace que la imagen cubra todo el área sin deformarse */
+  }
+
+  .controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+  }
+
+  .controls button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    border: none;
+    outline: none;
+  }
+
+  .controls button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+</style>
